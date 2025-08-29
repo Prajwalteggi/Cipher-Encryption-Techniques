@@ -1,0 +1,326 @@
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playfair Cipher Game</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        h1 {
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+            margin-bottom: 30px;
+        }
+        .input-group {
+            margin: 20px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 18px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #ffcc00;
+            color: #1a2a6c;
+            border: none;
+            padding: 12px 25px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #ffd740;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        .matrix {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+            max-width: 300px;
+            margin: 20px auto;
+        }
+        .cell {
+            background: #4a90e2;
+            padding: 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .result {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            min-height: 60px;
+            font-size: 18px;
+        }
+        .instructions {
+            text-align: left;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+        }
+        .instructions h2 {
+            color: #ffcc00;
+        }
+        .instructions ul {
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Playfair Cipher Game</h1>
+        
+        <div class="input-group">
+            <label for="keyword">Enter Keyword:</label>
+            <input type="text" id="keyword" placeholder="Enter your keyword" maxlength="25">
+        </div>
+        
+        <div class="input-group">
+            <label for="plaintext">Enter Text:</label>
+            <textarea id="plaintext" rows="3" placeholder="Enter text to encrypt/decrypt"></textarea>
+        </div>
+        
+        <button onclick="generateMatrix()">Generate Cipher Matrix</button>
+        <button onclick="encrypt()">Encrypt</button>
+        <button onclick="decrypt()">Decrypt</button>
+        <button onclick="clearAll()">Clear All</button>
+        
+        <div id="matrix-container" class="matrix"></div>
+        
+        <div class="result">
+            <strong>Result:</strong>
+            <div id="output"></div>
+        </div>
+        
+        <div class="instructions">
+            <h2>How to Play</h2>
+            <ul>
+                <li>Enter a keyword (letters only, no duplicates)</li>
+                <li>Enter text to encrypt or decrypt</li>
+                <li>Click "Generate Cipher Matrix" to see the Playfair matrix</li>
+                <li>Use "Encrypt" or "Decrypt" buttons to process your text</li>
+                <li>J is treated as I in the matrix</li>
+                <li>Repeated letters are separated by 'X'</li>
+                <li>Text is padded with 'X' if needed</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let playfairMatrix = [];
+
+        function createMatrix(keyword) {
+            const alphabet = 'ABCDEFGHIKLMNOPQRSTUVWXYZ'; // Note: No J
+            const key = keyword.toUpperCase().replace(/[^A-Z]/g, '').replace(/J/g, 'I');
+            let matrix = [];
+            let used = new Set();
+
+            // Add keyword letters
+            for (let char of key) {
+                if (!used.has(char)) {
+                    matrix.push(char);
+                    used.add(char);
+                }
+            }
+
+            // Add remaining letters
+            for (let char of alphabet) {
+                if (!used.has(char)) {
+                    matrix.push(char);
+                    used.add(char);
+                }
+            }
+
+            // Convert to 5x5 matrix
+            playfairMatrix = [];
+            for (let i = 0; i < 5; i++) {
+                playfairMatrix.push(matrix.slice(i * 5, i * 5 + 5));
+            }
+            return playfairMatrix;
+        }
+
+        function displayMatrix(matrix) {
+            const container = document.getElementById('matrix-container');
+            container.innerHTML = '';
+            
+            for (let i = 0; i < 5; i++) {
+                for (let j = 0; j < 5; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.textContent = matrix[i][j];
+                    container.appendChild(cell);
+                }
+            }
+        }
+
+        function generateMatrix() {
+            const keyword = document.getElementById('keyword').value;
+            if (!keyword) {
+                alert("Please enter a keyword");
+                return;
+            }
+            const matrix = createMatrix(keyword);
+            displayMatrix(matrix);
+        }
+
+        function prepareText(text) {
+            // Convert to uppercase and remove non-alphabetic characters
+            text = text.toUpperCase().replace(/[^A-Z]/g, '').replace(/J/g, 'I');
+            
+            // Handle repeated letters
+            let prepared = '';
+            for (let i = 0; i < text.length; i++) {
+                prepared += text[i];
+                if (i < text.length - 1 && text[i] === text[i+1]) {
+                    prepared += 'X';
+                }
+            }
+            
+            // Pad with X if odd length
+            if (prepared.length % 2 !== 0) {
+                prepared += 'X';
+            }
+            
+            return prepared;
+        }
+
+        function findPosition(char) {
+            for (let i = 0; i < 5; i++) {
+                for (let j = 0; j < 5; j++) {
+                    if (playfairMatrix[i][j] === char) {
+                        return {row: i, col: j};
+                    }
+                }
+            }
+            return null;
+        }
+
+        function encrypt() {
+            if (playfairMatrix.length === 0) {
+                alert("Please generate the matrix first!");
+                return;
+            }
+            
+            const plaintext = document.getElementById('plaintext').value;
+            if (!plaintext) {
+                alert("Please enter text to encrypt");
+                return;
+            }
+            
+            const preparedText = prepareText(plaintext);
+            let ciphertext = '';
+            
+            for (let i = 0; i < preparedText.length; i += 2) {
+                const a = preparedText[i];
+                const b = preparedText[i+1];
+                
+                const posA = findPosition(a);
+                const posB = findPosition(b);
+                
+                if (posA.row === posB.row) {
+                    // Same row
+                    ciphertext += playfairMatrix[posA.row][(posA.col + 1) % 5];
+                    ciphertext += playfairMatrix[posB.row][(posB.col + 1) % 5];
+                } else if (posA.col === posB.col) {
+                    // Same column
+                    ciphertext += playfairMatrix[(posA.row + 1) % 5][posA.col];
+                    ciphertext += playfairMatrix[(posB.row + 1) % 5][posB.col];
+                } else {
+                    // Rectangle
+                    ciphertext += playfairMatrix[posA.row][posB.col];
+                    ciphertext += playfairMatrix[posB.row][posA.col];
+                }
+            }
+            
+            document.getElementById('output').textContent = ciphertext;
+        }
+
+        function decrypt() {
+            if (playfairMatrix.length === 0) {
+                alert("Please generate the matrix first!");
+                return;
+            }
+            
+            const ciphertext = document.getElementById('plaintext').value;
+            if (!ciphertext) {
+                alert("Please enter text to decrypt");
+                return;
+            }
+            
+            // Prepare ciphertext (should already be in pairs)
+            const preparedText = ciphertext.toUpperCase().replace(/[^A-Z]/g, '');
+            let plaintext = '';
+            
+            for (let i = 0; i < preparedText.length; i += 2) {
+                const a = preparedText[i];
+                const b = preparedText[i+1];
+                
+                const posA = findPosition(a);
+                const posB = findPosition(b);
+                
+                if (posA.row === posB.row) {
+                    // Same row
+                    plaintext += playfairMatrix[posA.row][(posA.col + 4) % 5];
+                    plaintext += playfairMatrix[posB.row][(posB.col + 4) % 5];
+                } else if (posA.col === posB.col) {
+                    // Same column
+                    plaintext += playfairMatrix[(posA.row + 4) % 5][posA.col];
+                    plaintext += playfairMatrix[(posB.row + 4) % 5][posB.col];
+                } else {
+                    // Rectangle
+                    plaintext += playfairMatrix[posA.row][posB.col];
+                    plaintext += playfairMatrix[posB.row][posA.col];
+                }
+            }
+            
+            // Remove padding Xs for display
+            plaintext = plaintext.replace(/X/g, '');
+            
+            document.getElementById('output').textContent = plaintext;
+        }
+
+        function clearAll() {
+            document.getElementById('keyword').value = '';
+            document.getElementById('plaintext').value = '';
+            document.getElementById('output').textContent = '';
+            document.getElementById('matrix-container').innerHTML = '';
+            playfairMatrix = [];
+        }
+    </script>
+</body>
+</html>
